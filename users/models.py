@@ -4,6 +4,7 @@ from typing import Any
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager as BaseManager
 from django.core.exceptions import ValidationError
+from project.conf import app_settings
 
 
 class UserManager(BaseManager):
@@ -88,7 +89,7 @@ class AuthOtp(models.Model):
         get_latest_by = ['timestamp']
 
     def authenticate_code_by_otp_key(self, code):
-        t = pyotp.TOTP(self.otp_key, interval=300)
+        t = pyotp.TOTP(self.otp_key, interval=app_settings.OTP_TIME_INTERVAL)
         valid = t.verify(str(code))
         if valid:
             self.otp_register_code = code
@@ -96,8 +97,9 @@ class AuthOtp(models.Model):
 
     @property
     def otp_code(self) -> str:
-        return str(pyotp.TOTP(self.otp_key, interval=300).at(datetime.datetime.now()))
+        t = pyotp.TOTP(self.otp_key, interval=app_settings.OTP_TIME_INTERVAL)
+        return str(t.at(datetime.datetime.now()))
 
     @property
     def otp_interval(self) -> int:
-        return pyotp.TOTP(self.otp_key, interval=300).interval
+        return pyotp.TOTP(self.otp_key, interval=app_settings.OTP_TIME_INTERVAL).interval
