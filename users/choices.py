@@ -4,7 +4,7 @@ from enum import Enum
 class ChoicesEnum(Enum):
     @classmethod
     def choices(cls):
-        return tuple((i.name, i.value) for i in cls)
+        return tuple((item.value, item.value) for i, item in enumerate(cls))
 
 
 class AuthOtpTypeEnum(ChoicesEnum):
