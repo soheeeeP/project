@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt import authentication
 from .models import AuthOtp, User
+from .choices import AuthOtpTypeEnum
 from .serializers import (
     AuthOtpSendSMSSerializer,
     AuthOtpVerifyCodeSerializer,
@@ -27,7 +28,7 @@ class BaseViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
-        instance = self.get_object_by_data()
+        instance = kwargs.pop('instance', self.get_object_by_data())
         serializer = self.get_serializer(
             instance=instance,
             data=self.request.data,
@@ -76,7 +77,7 @@ class AuthViewSet(BaseViewSet):
         return self.update(request)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(BaseViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -103,7 +104,7 @@ class UserViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["post"],
         serializer_class=LoginSerializer,
-        url_path=r"user/login"
+        url_path=r"login"
     )
     def user_login(self, request):
         serializer = self.get_serializer(data=self.request.data, partial=True)
@@ -113,14 +114,14 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["get", "put"],
-        authentication_classes=authentication.JWTAuthentication,
-        url_path=r"user/"
+        authentication_classes=[authentication.JWTAuthentication],
+        url_path=r"detail"
     )
     def user_detail(self, request):
         if request.method == "GET":
             user = self.get_object()
             return Response(user, status=status.HTTP_200_OK)
-        return self.update(request)
+        return self.update(request, instance=self.request.user, partial=True)
 
 
 class PassWordViewSet(BaseViewSet):
@@ -132,25 +133,25 @@ class PassWordViewSet(BaseViewSet):
         detail=False,
         methods=["post"],
         serializer_class=AuthOtpSendSMSSerializer,
-        url_path=r"passwd/request"
+        url_path=r"request_code"
     )
     def passwd_request_code(self, request):
-        self.request.data.update({"auth_type": "password_reset"})
+        self.request.data.update({"auth_type": AuthOtpTypeEnum.PASSWORD_RESET.value})
         return self.create(request)
 
     @action(
         detail=False,
         methods=["post", "put"],
         serializer_class=AuthOtpVerifyCodeSerializer,
-        url_path=r"passwd/confirm"
+        url_path=r"verify_code"
     )
-    def passwd_confirm_code(self, request):
-        self.request.data.update({"auth_type": "password_reset"})
+    def passwd_verify_code(self, request):
+        self.request.data.update({"auth_type": AuthOtpTypeEnum.PASSWORD_RESET.value})
         if request.method == "PUT":
             return self.update(request, partial=True)
         return self.update(request)
 
-    @action(detail=False, url_path=r"passwd/reset")
+    @action(detail=False, url_path=r"reset")
     def passwd_reset(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
