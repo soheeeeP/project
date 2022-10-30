@@ -73,10 +73,6 @@ class User(AbstractUser, AbstractLoggingModel):
         blank=False
     )
     otp_register_code = models.CharField(max_length=6)
-    authenticated = models.BooleanField(
-        default=False,
-        verbose_name='휴대폰 인증 여부'
-    )
 
     objects = UserManager()
     USERNAME_FIELD = "email"
@@ -88,6 +84,12 @@ class User(AbstractUser, AbstractLoggingModel):
 
 
 class AuthOtp(models.Model):
+    auth_type = models.CharField(
+        max_length=20,
+        choices=AuthOtpTypeEnum.choices(),
+        default=AuthOtpTypeEnum.EMAIL,
+        verbose_name='인증 종류'
+    )
     number = models.CharField(
         max_length=17,
         verbose_name='휴대폰 번호',
@@ -97,6 +99,10 @@ class AuthOtp(models.Model):
     otp_key = models.CharField(max_length=128)
     otp_register_code = models.CharField(max_length=6, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    authenticated = models.BooleanField(
+        default=False,
+        verbose_name='휴대폰 인증 사용여부'
+    )
 
     class Meta:
         db_table = "AuthOtp"
