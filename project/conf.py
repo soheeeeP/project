@@ -83,7 +83,7 @@ class AppSettings:
 
     def _class(self, path: str) -> Any:
         value = self._import(path)
-        if inspect.isclass(value):
+        if not inspect.isclass(value):
             self._config_error(f"{value}_is_not_a_class")
         return value
 
