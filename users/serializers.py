@@ -20,7 +20,7 @@ class AuthOtpSerializer(serializers.ModelSerializer):
 class AuthOtpSendSMSSerializer(serializers.ModelSerializer):
     auth_type = serializers.ChoiceField(
         choices=AuthOtpTypeEnum.choices(),
-        default=AuthOtpTypeEnum.EMAIL,
+        default=AuthOtpTypeEnum.EMAIL.value,
         required=False
     )
 
@@ -55,7 +55,7 @@ class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
     verified_at = serializers.DateTimeField(required=False)
     auth_type = serializers.ChoiceField(
         choices=AuthOtpTypeEnum.choices(),
-        default=AuthOtpTypeEnum.EMAIL,
+        default=AuthOtpTypeEnum.EMAIL.value,
         required=False
     )
 
@@ -148,7 +148,7 @@ class LoginSerializer(TokenObtainPairSerializer):
     password = serializers.CharField(required=True)
     login_type = serializers.ChoiceField(
         choices=LoginTypeEnum.choices(),
-        default=LoginTypeEnum.EMAIL,
+        default=LoginTypeEnum.EMAIL.value,
         required=False
     )
 

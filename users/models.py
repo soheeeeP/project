@@ -45,7 +45,7 @@ class AbstractLoggingModel(models.Model):
     last_login_type = models.CharField(
         max_length=20,
         choices=LoginTypeEnum.choices(),
-        default=LoginTypeEnum.EMAIL
+        default=LoginTypeEnum.EMAIL.value
     )
 
     class Meta:
@@ -87,7 +87,7 @@ class AuthOtp(models.Model):
     auth_type = models.CharField(
         max_length=20,
         choices=AuthOtpTypeEnum.choices(),
-        default=AuthOtpTypeEnum.EMAIL,
+        default=AuthOtpTypeEnum.EMAIL.value,
         verbose_name='인증 종류'
     )
     number = models.CharField(
