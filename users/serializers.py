@@ -42,6 +42,7 @@ class AuthOtpSendSMSSerializer(serializers.ModelSerializer):
     def to_representation(self, instance: AuthOtp):
         expired_dt = self.instance.timestamp + datetime.timedelta(0, self.instance.otp_interval)
         data = super().to_representation(self.instance)
+        data.pop('auth_type')
         data.update({
             'otp_code': self.instance.otp_code,
             'expired_at': expired_dt.strftime('%Y-%m-%d %H:%M:%S')
@@ -90,6 +91,7 @@ class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data.pop('otp_code')
+        data.pop('auth_type')
         data.update({'verified_at': self.verified_at.strftime('%Y-%m-%d %H:%M:%S')})
         return data
 
@@ -174,6 +176,11 @@ class LoginSerializer(TokenObtainPairSerializer):
             user.last_login_type = default_login_type
             user.save(update_fields=["last_login_datetime", "last_login_type"])
 
+        return data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data.pop("login_type")
         return data
 
 
