@@ -4,6 +4,7 @@ from typing import Any
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager as BaseManager
 from django.core.exceptions import ValidationError
+from users.choices import AuthOtpTypeEnum, LoginTypeEnum
 from project.conf import app_settings
 
 
@@ -36,7 +37,22 @@ class UserManager(BaseManager):
         user.save()
 
 
-class User(AbstractUser):
+class AbstractLoggingModel(models.Model):
+    last_login_datetime = models.DateTimeField(
+        blank=True,
+        null=True
+    )
+    last_login_type = models.CharField(
+        max_length=20,
+        choices=LoginTypeEnum.choices(),
+        default=LoginTypeEnum.EMAIL
+    )
+
+    class Meta:
+        abstract = True
+
+
+class User(AbstractUser, AbstractLoggingModel):
     email = models.EmailField(
         unique=True,
         max_length=255,
