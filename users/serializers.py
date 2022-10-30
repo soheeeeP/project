@@ -139,7 +139,16 @@ class SignupSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email", "username", "nickname", "phone_number", "is_staff", "last_login"]
+        fields = [
+            "id",
+            "email",
+            "username",
+            "nickname",
+            "phone_number",
+            "is_staff",
+            "last_login_type",
+            "last_login_datetime"
+        ]
 
 
 class LoginSerializer(TokenObtainPairSerializer):
