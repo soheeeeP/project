@@ -135,6 +135,22 @@ AUTH_USER_MODEL = 'users.User'
 OTP_TIME_INTERVAL = 300
 
 REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'default': None,
+        'anon': '20/min',
+        'user': '5000/day',
+        'user.send_code': '5/day',
+        'user.verify_code': '50/day',
+    },
+    'EXCEPTION_HANLDER': 'rest_framework.views.exception_handler',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
