@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status, permissions, throttling
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt import authentication
@@ -11,6 +11,7 @@ from .serializers import (
     UserSerializer,
     PasswordSerializer
 )
+from project.conf import app_settings
 
 
 class BaseViewSet(viewsets.ModelViewSet):
@@ -41,6 +42,19 @@ class AuthViewSet(BaseViewSet):
     lookup_data_key = 'number'
     queryset = AuthOtp.objects.all()
     serializer_class = AuthOtpSendSMSSerializer
+    throttle_scope = app_settings.REST_FRAMEWORK_DEFAULT_THROTTLE_RATES.get('default')
+
+    def set_throttles(self):
+        if self.request.user.is_anonymous:
+            self.throttle_scope = 'user.' + self.action
+            throttle_classes = [throttling.ScopedRateThrottle]
+        else:
+            throttle_classes = app_settings.REST_FRAMEWORK_THROTTLE_CLASSES
+        self.throttle_classes = [throttle() for throttle in throttle_classes]
+
+    def get_throttles(self):
+        self.set_throttles()
+        return self.throttle_classes
 
     @action(
         detail=False,
@@ -66,12 +80,16 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    def get_permissions(self):
+    def set_permissions(self):
         if self.request.method == 'GET':
             permission_classes = [permissions.IsAuthenticated]
         else:
             permission_classes = [permissions.AllowAny]
-        return [perm() for perm in permission_classes]
+        self.permission_classes = [perm() for perm in permission_classes]
+
+    def get_permissions(self):
+        self.set_permissions()
+        return self.permission_classes
 
     @action(
         detail=False,
@@ -108,6 +126,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class PassWordViewSet(BaseViewSet):
     lookup_data_key = 'number'
     serializer_class = PasswordSerializer
+    throttle_scope = app_settings.REST_FRAMEWORK_DEFAULT_THROTTLE_RATES.get('default')
 
     @action(
         detail=False,
@@ -136,4 +155,3 @@ class PassWordViewSet(BaseViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
