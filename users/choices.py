@@ -6,6 +6,10 @@ class ChoicesEnum(Enum):
     def choices(cls):
         return tuple((item.value, item.value) for i, item in enumerate(cls))
 
+    @classmethod
+    def choices_list(cls):
+        return list(item.value for i, item in enumerate(cls))
+
 
 class AuthOtpTypeEnum(ChoicesEnum):
     EMAIL = 'email'

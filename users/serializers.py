@@ -31,7 +31,7 @@ class AuthOtpSendSMSSerializer(serializers.ModelSerializer):
     def validate_number(self, value):
         regex = re.match(r'^(010|070)-\d{3,4}-\d{4}$', value)
         if not regex:
-            raise ValidationError(detail={"detail": "invalid_number", "number_format": "010-0000-0000"})
+            raise ValidationError(detail={"detail": "invalid_number", "number_format": ["010-0000-0000"]})
         return regex.string
 
     def save(self, **kwargs):
@@ -73,20 +73,20 @@ class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if not self.instance:
-            raise ValidationError(detail={"detail": "invalid_number"})
+            raise ValidationError("invalid_number")
         return attrs
 
     def save(self, **kwargs):
         otp_code = self.validated_data.pop("otp_code")
         verified = self.instance.authenticate_code_by_otp_key(otp_code)
         if not verified:
-            raise ValidationError(detail={"detail": "invalid_code"})
+            raise ValidationError("invalid_code")
         self.validated_data.update({"otp_register_code": otp_code})
         if self.instance is not None:
             self.instance = self.update(self.instance, self.validated_data)
             self.verified_at = datetime.datetime.now()
         else:
-            raise ValidationError(detail={"detail": "invalid_number"})
+            raise ValidationError("invalid_number")
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -120,7 +120,7 @@ class SignupSerializer(serializers.ModelSerializer):
             assert auth_otp.authenticated is False
             self.auth_otp = auth_otp
         except (AuthOtp.DoesNotExist, AssertionError) as e:
-            raise ValidationError(detail={"detail": "invalid_auth_otp_data"})
+            raise ValidationError("invalid_auth_otp_data")
         return attrs
 
     def save(self, **kwargs):
@@ -168,9 +168,9 @@ class LoginSerializer(TokenObtainPairSerializer):
         try:
             user = User.objects.get(Q(**filter_kwargs))
             if not user.check_password(attrs["password"]):
-                raise ValidationError(detail={"detail": "wrong_password"})
+                raise ValidationError("wrong_password")
         except User.DoesNotExist:
-            raise ValidationError(detail={"detail": "no_exist_user"})
+            raise ValidationError("no_exist_user")
 
         data = super().validate(attrs)
         refresh = self.get_token(self.user)
@@ -212,13 +212,13 @@ class PasswordSerializer(serializers.Serializer):
             assert str(auth_otp.otp_register_code) == str(attrs["otp_register_code"])
             assert auth_otp.authenticated is False
         except (AuthOtp.DoesNotExist, AssertionError) as e:
-            raise ValidationError(detail={"detail": "invalid_auth_otp_data"})
+            raise ValidationError("invalid_auth_otp_data")
 
         try:
             user = User.objects.get(phone_number=number)
             self.user = user
         except User.DoesNotExist:
-            raise ValidationError(detail={"detail": "invalid_phone_number"})
+            raise ValidationError("invalid_phone_number")
         return attrs
 
     def save(self, **kwargs):
