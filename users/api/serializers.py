@@ -7,25 +7,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from project.conf import app_settings
-from .models import AuthOtp, User
-from .choices import AuthOtpTypeEnum, LoginTypeEnum
-
-
-class ChoiceTypeField(serializers.ChoiceField):
-    def __init__(self, valid_choice=None, **kwargs):
-        super().__init__(**kwargs)
-        self.valid_choice = valid_choice
-
-    def fail(self, key, **kwargs):
-        msg = self.error_messages.get(key, None)
-        message_string = msg.format(**kwargs)
-        detail = {"detail": message_string}
-        detail.update(self.valid_choice)
-        raise ValidationError(detail, code=key)
-
-    default_error_messages = {
-        'invalid_choice': "invalid_choice_{input}",
-    }
+from users.fields import ChoiceTypeField
+from users.models import AuthOtp, User
+from users.choices import AuthOtpTypeEnum, LoginTypeEnum
 
 
 class AuthOtpSerializer(serializers.ModelSerializer):

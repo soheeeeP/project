@@ -2,8 +2,8 @@ from rest_framework import viewsets, status, permissions, throttling
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt import authentication
-from .models import AuthOtp, User
-from .choices import AuthOtpTypeEnum
+from users.models import AuthOtp, User
+from users.choices import AuthOtpTypeEnum
 from .serializers import (
     AuthOtpSendSMSSerializer,
     AuthOtpVerifyCodeSerializer,

@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from rest_framework.routers import DefaultRouter
-from users.views import AuthViewSet, UserViewSet, PassWordViewSet
+from users.api.views import AuthViewSet, UserViewSet, PassWordViewSet
 
 router = DefaultRouter()
 router.register("auth", AuthViewSet, basename="auth")
