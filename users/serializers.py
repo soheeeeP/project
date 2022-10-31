@@ -11,6 +11,23 @@ from .models import AuthOtp, User
 from .choices import AuthOtpTypeEnum, LoginTypeEnum
 
 
+class ChoiceTypeField(serializers.ChoiceField):
+    def __init__(self, valid_choice=None, **kwargs):
+        super().__init__(**kwargs)
+        self.valid_choice = valid_choice
+
+    def fail(self, key, **kwargs):
+        msg = self.error_messages.get(key, None)
+        message_string = msg.format(**kwargs)
+        detail = {"detail": message_string}
+        detail.update(self.valid_choice)
+        raise ValidationError(detail, code=key)
+
+    default_error_messages = {
+        'invalid_choice': "invalid_choice_{input}",
+    }
+
+
 class AuthOtpSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuthOtp
@@ -18,10 +35,11 @@ class AuthOtpSerializer(serializers.ModelSerializer):
 
 
 class AuthOtpSendSMSSerializer(serializers.ModelSerializer):
-    auth_type = serializers.ChoiceField(
+    auth_type = ChoiceTypeField(
         choices=AuthOtpTypeEnum.choices(),
         default=AuthOtpTypeEnum.EMAIL.value,
-        required=False
+        required=False,
+        valid_choice={"auth_type": AuthOtpTypeEnum.choices_list()}
     )
 
     class Meta:
@@ -53,10 +71,11 @@ class AuthOtpSendSMSSerializer(serializers.ModelSerializer):
 class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
     otp_code = serializers.CharField(max_length=128)
     verified_at = serializers.DateTimeField(required=False)
-    auth_type = serializers.ChoiceField(
+    auth_type = ChoiceTypeField(
         choices=AuthOtpTypeEnum.choices(),
         default=AuthOtpTypeEnum.EMAIL.value,
-        required=False
+        required=False,
+        valid_choice={"auth_type": AuthOtpTypeEnum.choices_list()}
     )
 
     class Meta:
@@ -155,10 +174,11 @@ class LoginSerializer(TokenObtainPairSerializer):
     email = serializers.EmailField(max_length=255)
     phone_number = serializers.CharField(max_length=17)
     password = serializers.CharField(required=True)
-    login_type = serializers.ChoiceField(
+    login_type = ChoiceTypeField(
         choices=LoginTypeEnum.choices(),
         default=LoginTypeEnum.EMAIL.value,
-        required=False
+        required=False,
+        valid_choice={"login_type": dict(LoginTypeEnum.choices())}
     )
 
     def validate(self, attrs):
