@@ -146,11 +146,12 @@ REST_FRAMEWORK = {
         'user.send_code': '5/day',
         'user.verify_code': '50/day',
     },
-    'EXCEPTION_HANLDER': 'rest_framework.views.exception_handler',
     'DEFAULT_RENDERER_CLASSES': [
+        'utils.ResponseRenderer',
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+    'EXCEPTION_HANDLER': 'exceptions.custom_exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
