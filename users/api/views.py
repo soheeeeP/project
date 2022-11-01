@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt import authentication
 from users.models import AuthOtp, User
 from users.choices import AuthOtpTypeEnum
+from .exceptions import BaseThrottled
 from .serializers import (
     AuthOtpSendSMSSerializer,
     AuthOtpVerifyCodeSerializer,
@@ -17,6 +18,9 @@ from project.conf import app_settings
 
 class BaseViewSet(viewsets.ModelViewSet):
     lookup_data_key = None
+
+    def throttled(self, request, wait):
+        raise BaseThrottled(wait)
 
     def get_object_by_data(self):
         queryset = self.get_queryset()
