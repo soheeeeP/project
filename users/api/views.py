@@ -83,9 +83,7 @@ class AuthViewSet(BaseViewSet):
         serializer_class=AuthOtpVerifyCodeSerializer
     )
     def verify_code(self, request) -> Response:
-        if request.method == "PUT":
-            return self.update(request, partial=True)
-        return self.update(request)
+        return self.update(request, partial=True)
 
 
 class UserViewSet(BaseViewSet):
@@ -130,13 +128,14 @@ class UserViewSet(BaseViewSet):
     )
     def user_detail(self, request):
         if request.method == "GET":
-            user = self.get_object()
-            return Response(user, status=status.HTTP_200_OK)
+            user = self.request.user
+            return Response({"user": UserSerializer(user).data}, status=status.HTTP_200_OK)
         return self.update(request, instance=self.request.user, partial=True)
 
 
 class PassWordViewSet(BaseViewSet):
     lookup_data_key = 'number'
+    queryset = AuthOtp.objects.all()
     serializer_class = PasswordSerializer
     throttle_scope = app_settings.REST_FRAMEWORK_DEFAULT_THROTTLE_RATES.get('default')
 
@@ -158,12 +157,11 @@ class PassWordViewSet(BaseViewSet):
     )
     def passwd_verify_code(self, request):
         self.request.data.update({"auth_type": AuthOtpTypeEnum.PASSWORD_RESET.value})
-        if request.method == "PUT":
-            return self.update(request, partial=True)
-        return self.update(request)
+        return self.update(request, partial=True)
 
-    @action(detail=False, url_path=r"reset")
+    @action(detail=False, methods=["post"], url_path=r"reset")
     def passwd_reset(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(serializer.data)

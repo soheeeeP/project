@@ -66,6 +66,14 @@ class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
         model = AuthOtp
         fields = ["number", "otp_code", "verified_at", "auth_type"]
 
+    def validate_number(self, value):
+        try:
+            instance = self.Meta.model.objects.filter(number=value).latest()
+            self.instance = instance
+        except self.Meta.model.DoesNotExist:
+            raise ValidationError("invalid_number")
+        return value
+
     def validate_auth_type(self, value):
         default_auth_type = self.get_fields().get('auth_type').default
         auth_type = value or default_auth_type
@@ -73,11 +81,7 @@ class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
             assert self.instance.auth_type == auth_type
         except AssertionError:
             raise ValidationError(detail={"detail": "invalid_auth_type", "auth_type": dict(AuthOtpTypeEnum.choices())})
-
-    def validate(self, attrs):
-        if not self.instance:
-            raise ValidationError("invalid_number")
-        return attrs
+        return auth_type
 
     def save(self, **kwargs):
         otp_code = self.validated_data.pop("otp_code")
@@ -118,12 +122,13 @@ class SignupSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         number = attrs["phone_number"]
         try:
-            auth_otp = AuthOtp.objects.filter(number=number).latest()
+            auth_otp = AuthOtp.objects.filter(number=number, authenticated=False).latest()
             assert str(auth_otp.otp_register_code) == str(attrs["otp_register_code"])
-            assert auth_otp.authenticated is False
             self.auth_otp = auth_otp
-        except (AuthOtp.DoesNotExist, AssertionError) as e:
-            raise ValidationError("invalid_auth_otp_data")
+        except AuthOtp.DoesNotExist:
+            raise ValidationError("invalid_number")
+        except AssertionError:
+            raise ValidationError("unauthenticated_otp")
         return attrs
 
     def save(self, **kwargs):
@@ -157,12 +162,14 @@ class UserSerializer(serializers.ModelSerializer):
 class LoginSerializer(TokenObtainPairSerializer):
     email = serializers.EmailField(max_length=255)
     phone_number = serializers.CharField(max_length=17)
+    username = serializers.CharField(max_length=150)
+    nickname = serializers.CharField(max_length=150)
     password = serializers.CharField(required=True)
     login_type = ChoiceTypeField(
         choices=LoginTypeEnum.choices(),
         default=LoginTypeEnum.EMAIL.value,
         required=False,
-        valid_choice={"login_type": dict(LoginTypeEnum.choices())}
+        valid_choice={"login_type": LoginTypeEnum.choices_list()}
     )
 
     def validate(self, attrs):
@@ -176,14 +183,12 @@ class LoginSerializer(TokenObtainPairSerializer):
         except User.DoesNotExist:
             raise ValidationError("no_exist_user")
 
-        data = super().validate(attrs)
-        refresh = self.get_token(self.user)
-        data.update({
+        refresh = self.get_token(user)
+        data = {
             "user": UserSerializer(user).data,
             "access": str(refresh.access_token),
             "refresh": str(refresh)
-        })
-
+        }
         if app_settings.SIMPLE_JWT_UPDATE_LOGIN_SETTING:
             user.last_login_datetime = timezone.now()
             user.last_login_type = default_login_type
@@ -212,10 +217,17 @@ class PasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         number = attrs["number"]
         try:
-            auth_otp = AuthOtp.objects.filter(number=number).latest()
-            assert str(auth_otp.otp_register_code) == str(attrs["otp_register_code"])
-            assert auth_otp.authenticated is False
-        except (AuthOtp.DoesNotExist, AssertionError) as e:
+            auth_otp = AuthOtp.objects.filter(
+                number=number,
+                authenticated=False,
+                auth_type=AuthOtpTypeEnum.PASSWORD_RESET.value
+            ).latest()
+        except AuthOtp.DoesNotExist:
+            raise ValidationError("invalid_number")
+        try:
+            assert auth_otp.auth_type == AuthOtpTypeEnum.PASSWORD_RESET.value
+            assert str(auth_otp.otp_register_code) == str(attrs["otp_code"])
+        except AssertionError:
             raise ValidationError("invalid_auth_otp_data")
 
         try:

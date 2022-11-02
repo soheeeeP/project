@@ -3,6 +3,8 @@ import pyotp
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from django.core.exceptions import ValidationError
+
+from users.choices import AuthOtpTypeEnum
 from users.models import User, AuthOtp
 
 
@@ -21,5 +23,5 @@ def authenticate_user_phone(sender, instance: User, **kwargs):
         raise ValidationError('invalid_number')
     if not auth_otp.otp_register_code:
         raise ValidationError('unauthenticated_otp_code')
-    if auth_otp.otp_register_code != instance.otp_register_code:
+    if auth_otp.auth_type == AuthOtpTypeEnum.EMAIL.value and auth_otp.otp_register_code != instance.otp_register_code:
         raise ValidationError('invalid_otp_code')
