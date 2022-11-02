@@ -4,7 +4,7 @@ from rest_framework.views import exception_handler
 
 def get_error_details(data):
     if isinstance(data, (list, tuple)):
-        return [str(item) for item in data]
+        return [get_error_details(item) if isinstance(item, dict) else str(item) for item in data]
     elif isinstance(data, dict):
         return {
             key: get_error_details(value)
