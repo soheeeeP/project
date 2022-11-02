@@ -1,10 +1,12 @@
+import json
+
 from rest_framework import viewsets, status, permissions, throttling
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt import authentication
 from users.models import AuthOtp, User
 from users.choices import AuthOtpTypeEnum
-from .exceptions import BaseThrottled
+from .exceptions import Throttled, NotAuthenticated, PermissionDenied
 from .serializers import (
     AuthOtpSendSMSSerializer,
     AuthOtpVerifyCodeSerializer,
@@ -20,7 +22,12 @@ class BaseViewSet(viewsets.ModelViewSet):
     lookup_data_key = None
 
     def throttled(self, request, wait):
-        raise BaseThrottled(wait)
+        raise Throttled(wait)
+
+    def permission_denied(self, request, message=None, code=None):
+        if request.authenticators and not request.successful_authenticator:
+            raise NotAuthenticated()
+        raise PermissionDenied
 
     def get_object_by_data(self):
         queryset = self.get_queryset()
