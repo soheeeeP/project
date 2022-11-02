@@ -1,4 +1,5 @@
 import inspect
+import datetime
 from typing import Any
 
 
@@ -13,8 +14,18 @@ class AppSettings:
         return self._model(value)
 
     @property
+    def SIMPLE_JWT_ACCESS_TOKEN_LIFETIME(self) -> datetime:
+        default = datetime.timedelta(hours=1)
+        return self._multiple_settings("SIMPLE_JWT", "ACCESS_TOKEN_LIFETIME", {}, default)
+
+    @property
+    def SIMPLE_JWT_REFRESH_TOKEN_LIFETIME(self) -> datetime:
+        default = datetime.timedelta(days=1)
+        return self._multiple_settings("SIMPLE_JWT", "REFRESH_TOKEN_LIFETIME", {}, default)
+
+    @property
     def SIMPLE_JWT_UPDATE_LOGIN_SETTING(self) -> bool:
-        return self._settings("SIMPLE_JWT", {}).get("UPDATE_LAST_LOGIN", False)
+        return self._multiple_settings("SIMPLE_JWT", "UPDATE_LAST_LOGIN", {}, False)
 
     @property
     def REST_FRAMEWORK_AUTHENTICATION_CLASSES(self) -> Any:
