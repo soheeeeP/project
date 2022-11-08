@@ -60,6 +60,7 @@ class AuthOtpSendSMSSerializer(serializers.ModelSerializer):
 
 class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
     otp_code = serializers.CharField(max_length=128)
+    otp_register_code = serializers.CharField(max_length=128, required=False)
     verified_at = serializers.DateTimeField(required=False)
     auth_type = ChoiceTypeField(
         choices=AuthOtpTypeEnum.choices(),
@@ -70,7 +71,7 @@ class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AuthOtp
-        fields = ["number", "otp_code", "verified_at", "auth_type"]
+        fields = ["number", "otp_code", "verified_at", "auth_type", "otp_register_code"]
 
     def validate_number(self, value):
         try:
@@ -100,10 +101,12 @@ class AuthOtpVerifyCodeSerializer(serializers.ModelSerializer):
             self.verified_at = datetime.datetime.now()
         else:
             raise ValidationError("invalid_number")
+        return self.instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data.pop('otp_code')
+        data.pop('otp_register_code')
         data.pop('auth_type')
         data.update({'verified_at': self.verified_at.strftime('%Y-%m-%d %H:%M:%S')})
         return data
@@ -229,7 +232,7 @@ class PasswordSerializer(serializers.Serializer):
                 auth_type=AuthOtpTypeEnum.PASSWORD_RESET.value
             ).latest()
         except AuthOtp.DoesNotExist:
-            raise ValidationError("invalid_number")
+            raise ValidationError("invalid_number_or_code")
         try:
             assert auth_otp.auth_type == AuthOtpTypeEnum.PASSWORD_RESET.value
             assert str(auth_otp.otp_register_code) == str(attrs["otp_code"])

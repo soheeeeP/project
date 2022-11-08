@@ -159,7 +159,7 @@ class PassWordViewSet(BaseViewSet):
         self.request.data.update({"auth_type": AuthOtpTypeEnum.PASSWORD_RESET.value})
         return self.update(request, partial=True)
 
-    @action(detail=False, methods=["post"], url_path=r"reset")
+    @action(detail=False, methods=["post", "put"], url_path=r"reset")
     def passwd_reset(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
