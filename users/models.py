@@ -111,6 +111,8 @@ class AuthOtp(models.Model):
         get_latest_by = ['timestamp']
 
     def authenticate_code_by_otp_key(self, code):
+        if self.otp_register_code:
+            return True
         t = pyotp.TOTP(self.otp_key, interval=app_settings.OTP_TIME_INTERVAL)
         valid = t.verify(str(code))
         if valid:

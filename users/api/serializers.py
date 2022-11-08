@@ -37,7 +37,11 @@ class AuthOtpSendSMSSerializer(serializers.ModelSerializer):
         return regex.string
 
     def save(self, **kwargs):
-        auth_otp = self.Meta.model.objects.create(**self.validated_data)
+        try:
+            auth_otp = self.Meta.model.objects.filter(**self.validated_data, authenticated=False).latest()
+        except self.Meta.model.DoesNotExist:
+            auth_otp = self.Meta.model.objects.create(**self.validated_data)
+
         self.instance = auth_otp
         return auth_otp
 
