@@ -1,5 +1,7 @@
 import re
 import datetime
+
+from django.contrib.auth.hashers import check_password
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -238,7 +240,14 @@ class PasswordSerializer(serializers.Serializer):
             user = User.objects.get(phone_number=number)
             self.user = user
         except User.DoesNotExist:
-            raise ValidationError("invalid_phone_number")
+            raise ValidationError("no_exist_user")
+
+        if check_password(attrs["new_passwd"], self.user.password):
+            raise ValidationError("previous_passwd")
+
+        auth_otp.authenticated = True
+        auth_otp.save()
+
         return attrs
 
     def save(self, **kwargs):
