@@ -1,5 +1,16 @@
- 
-- **[POST] `/user/send_code`**: 회원가입 전에 전화번호 인증코드 요청을 보내는 경우
+## API List
+[전화번호 인증번호요청](#post-usersend_code-회원가입-전에-전화번호-인증코드-요청을-보내는-경우) 
+| [전화번호 인증](#put-userverify_code-전화번호-인증을-수행)
+| [회원가입](#post-usersignup-사용자-회원가입) | [로그인](#post-userlogin-사용자-로그인)
+| [사용자 정보 조회](#get-userdetail-사용자-정보-조회)
+
+[비밀번호 재설정: 전화번호 인증번호 요청](#post-passwdrequest_code-비밀번호-재설정을-위한-전화번호-인증-요청)
+| [비밀번호 재설정: 전화번호 인증](#put-passwdverify_code-비밀번호-재설정을-위한-전화번호-인증을-수행)
+| [비밀번호 재설정](#put-passwdreset-비밀번호-재설정)
+
+<br>
+
+#### [POST] `/user/send_code`: 회원가입 전에 전화번호 인증코드 요청을 보내는 경우
   - Request Body Format
     ``` 
     - auth_type: string / choices=["email", "password_reset"], required=False, default="email"
@@ -61,8 +72,8 @@
         ]
     }
     ```
-    
-- **[PUT] `/user/verify_code`**: 인증을 수행
+------------------
+#### [PUT] `/user/verify_code`: 전화번호 인증을 수행
   - Request Body Format
     ```
     - number: string
@@ -101,8 +112,8 @@
       "fail_case": ["invalid_code"]
     }
     ```
-
-- **[POST] `/user/signup`**
+------------------
+#### **[POST] `/user/signup`**: 사용자 회원가입
   - Request Body Format
     ``` 
     - phone_number: string
@@ -157,7 +168,8 @@
         "fail_case": ["unauthenticated_otp"]
     }
     ```
-- **[POST] `/user/login`**
+------------------
+#### **[POST] `/user/login`**: 사용자 로그인
   - Request Body Format
     ```
     - email / phone_number / username / nickname: string
@@ -230,7 +242,8 @@
         "fail_case": ["wrong_password"]
     }
     ```
-- **[GET] `/user/detail`**
+------------------
+#### **[GET] `/user/detail`**: 사용자 정보 조회
   - Request Header
     ```
     Authorization: Bearer {Token}
@@ -277,8 +290,8 @@
         "fail_case": ["not_authenticated"]
     }
     ```
-
-- **[POST] `/passwd/request_code`**
+------------------
+#### **[POST] `/passwd/request_code`**: 비밀번호 재설정을 위한 전화번호 인증 요청
   - Request Body Format
     ```
     - auth_type: string / choices=["email", "password_reset"], required=False, default="password_reset"
@@ -340,8 +353,8 @@
         ]
     }
     ```
-
-- **[PUT] `/passwd/verify_code`**
+------------------
+#### **[PUT] `/passwd/verify_code`**: 비밀번호 재설정을 위한 전화번호 인증을 수행
   - Request Body Format
     ```
     - number: string
@@ -380,8 +393,8 @@
       "fail_case": ["invalid_code"]
     }
     ```
-  
-- **[PUT] `/passwd/reset/`**
+------------------
+#### **[PUT] `/passwd/reset/`**: 비밀번호 재설정
   - Request Body Format
     ```
     - phone_number: string
