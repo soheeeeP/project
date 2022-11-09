@@ -1,0 +1,29 @@
+version: "1"
+volumes:
+  psql_db: {}
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - psql_db:/var/lib/postgresql/data
+    env_file:
+      - project/.env
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db

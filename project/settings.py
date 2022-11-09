@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import datetime
 import os
+import string
+import random
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -24,7 +26,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+chars = ''.join([string.ascii_letters, string.digits, string.punctuation])\
+            .replace('\'', '').replace('"', '').replace('\\', '')
+DEFAULT_SECRET_KEY = 'django-insecure-' + ''.join([random.SystemRandom().choice(chars) for i in range(50)])
+
+SECRET_KEY = os.environ.get('SECRET_KEY', DEFAULT_SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -82,9 +88,13 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get('POSTGRES_NAME', 'postgres'),
+        "USER": os.environ.get('POSTGRES_USER', 'postgres'),
+        "PASSWORD": os.environ.get('POSTGRES_PASSWORD', 'postgres'),
+        "HOST": "db",
+        "PORT": os.environ.get('POSTGRES_PORT', 5432),
     }
 }
 
@@ -160,7 +170,6 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": datetime.timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "ALGORITHM": "HS256",
